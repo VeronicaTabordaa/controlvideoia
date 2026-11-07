@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, Activity, Film, FileText, UserCheck, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Activity, Film, FileText, UserCheck, Volume2, VolumeX, Captions } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'video' | 'lab' | 'script' | 'case';
@@ -9,6 +9,8 @@ interface HeaderProps {
   isMuted: boolean;
   onToggleMute: () => void;
   currentSceneNumber: string;
+  showSubtitles?: boolean;
+  onToggleSubtitles?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +21,8 @@ export const Header: React.FC<HeaderProps> = ({
   isMuted,
   onToggleMute,
   currentSceneNumber,
+  showSubtitles,
+  onToggleSubtitles,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3 flex items-center justify-between gap-4 md:gap-8 transition-colors">
@@ -90,6 +94,26 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Zone 3: Quick Action & Controls */}
       <div className="flex items-center gap-2 shrink-0">
+        {activeTab === 'video' && onToggleSubtitles && (
+          <button
+            onClick={onToggleSubtitles}
+            title={showSubtitles ? 'Ocultar tarjeta de transcripción' : 'Mostrar tarjeta de transcripción'}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              showSubtitles
+                ? 'bg-sky-500/25 text-sky-300 border-sky-500/60 shadow-sm'
+                : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-850 hover:border-slate-600'
+            }`}
+          >
+            <Captions className="w-4 h-4 text-sky-400" />
+            <span className="hidden sm:inline">
+              {showSubtitles ? 'Ocultar Transcripción' : 'Mostrar Transcripción'}
+            </span>
+            <span className="sm:hidden">
+              {showSubtitles ? 'Ocultar' : 'Texto'}
+            </span>
+          </button>
+        )}
+
         <button
           onClick={onToggleMute}
           title={isMuted ? 'Activar voz' : 'Silenciar voz'}

@@ -13,6 +13,7 @@ import {
   Sliders,
   ExternalLink,
   Mic,
+  Captions,
 } from 'lucide-react';
 import { Scene, DialogueLine } from '../../types/narrative';
 import { CHARACTERS } from '../../data/storyboardData';
@@ -39,6 +40,8 @@ interface CinematicPlayerProps {
   onToggleMute: () => void;
   onChangeVolume: (vol: number) => void;
   onOpenInLab?: (sceneNumber: string) => void;
+  showSubtitles?: boolean;
+  onToggleSubtitles?: () => void;
 }
 
 export const CinematicPlayer: React.FC<CinematicPlayerProps> = ({
@@ -59,12 +62,18 @@ export const CinematicPlayer: React.FC<CinematicPlayerProps> = ({
   onToggleMute,
   onChangeVolume,
   onOpenInLab,
+  showSubtitles: externalShowSubtitles,
+  onToggleSubtitles,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [internalShowSubtitles, setInternalShowSubtitles] = useState(false);
   const controlsTimeoutRef = useRef<number | null>(null);
+
+  const showSubtitles = externalShowSubtitles !== undefined ? externalShowSubtitles : internalShowSubtitles;
+  const handleToggleSubtitles = onToggleSubtitles || (() => setInternalShowSubtitles((prev) => !prev));
 
   const scene = scenes[currentSceneIndex];
   const dialogue: DialogueLine | undefined = scene?.dialogues[currentDialogueIndex] || scene?.dialogues[0];
@@ -159,95 +168,112 @@ export const CinematicPlayer: React.FC<CinematicPlayerProps> = ({
             </h2>
           </div>
 
-          {onOpenInLab && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => onOpenInLab(scene.number)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-300 bg-slate-900/80 hover:bg-sky-950/90 border border-sky-700/50 rounded-lg shadow-lg backdrop-blur-md transition-all hover:scale-105"
+              onClick={handleToggleSubtitles}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-lg backdrop-blur-md transition-all border ${
+                showSubtitles
+                  ? 'text-sky-300 bg-sky-950/90 border-sky-500/60 ring-1 ring-sky-500/30'
+                  : 'text-slate-200 bg-slate-900/80 hover:bg-slate-800 border-slate-700/60'
+              }`}
+              title={showSubtitles ? 'Ocultar tarjeta de transcripción' : 'Mostrar tarjeta de transcripción'}
             >
-              <Sliders className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Explorar en Laboratorio</span>
-              <ExternalLink className="w-3 h-3 opacity-70" />
+              <Captions className="w-3.5 h-3.5 text-sky-400" />
+              <span>{showSubtitles ? 'Ocultar Transcripción' : 'Mostrar Transcripción'}</span>
             </button>
-          )}
+
+            {onOpenInLab && (
+              <button
+                onClick={() => onOpenInLab(scene.number)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-300 bg-slate-900/80 hover:bg-sky-950/90 border border-sky-700/50 rounded-lg shadow-lg backdrop-blur-md transition-all hover:scale-105"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Explorar en Laboratorio</span>
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Center / Bottom Speaker & Dialogue Karaoke Box */}
-        <div className="absolute bottom-16 sm:bottom-20 left-4 right-4 sm:left-8 sm:right-8 space-y-3 pointer-events-none">
-          {/* Speaker Badge & Live Audio Wave */}
-          <div className="flex items-center gap-3">
-            <div
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md shadow-lg ${speaker.badgeClass}`}
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: speaker.avatarColor }}
-              />
-              <span className="font-bold text-xs sm:text-sm text-white">
-                {speaker.name} ({speaker.age} años)
-              </span>
-              <span className="text-slate-400 text-xs hidden md:inline">
-                · {speaker.role}
-              </span>
-            </div>
-
-            {/* Audio Wave Simulation while Voice is Speaking */}
-            {isPlaying && voiceState.isPlaying && (
-              <div className="flex items-end gap-1 h-5 px-2 py-1 bg-slate-950/60 rounded-md border border-slate-800 backdrop-blur-sm">
-                <span className="w-1 bg-sky-400 rounded-full animate-pulse h-2" />
-                <span className="w-1 bg-sky-400 rounded-full animate-bounce h-4" />
-                <span className="w-1 bg-sky-400 rounded-full animate-pulse h-3" />
-                <span className="w-1 bg-sky-400 rounded-full animate-bounce h-5" />
-                <span className="w-1 bg-sky-400 rounded-full animate-pulse h-2.5" />
+        {/* Center / Bottom Speaker & Dialogue Karaoke Box (Hidden by default, toggleable) */}
+        {showSubtitles && (
+          <div className="absolute bottom-16 sm:bottom-20 left-4 right-4 sm:left-8 sm:right-8 space-y-3 pointer-events-none animate-in fade-in duration-200">
+            {/* Speaker Badge & Live Audio Wave */}
+            <div className="flex items-center gap-3">
+              <div
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md shadow-lg ${speaker.badgeClass}`}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: speaker.avatarColor }}
+                />
+                <span className="font-bold text-xs sm:text-sm text-white">
+                  {speaker.name} ({speaker.age} años)
+                </span>
+                <span className="text-slate-400 text-xs hidden md:inline">
+                  · {speaker.role}
+                </span>
               </div>
-            )}
 
-            {dialogue?.tone && (
-              <span className="text-xs text-slate-400 italic hidden sm:inline">
-                [{dialogue.tone}]
-              </span>
-            )}
-          </div>
+              {/* Audio Wave Simulation while Voice is Speaking */}
+              {isPlaying && voiceState.isPlaying && (
+                <div className="flex items-end gap-1 h-5 px-2 py-1 bg-slate-950/60 rounded-md border border-slate-800 backdrop-blur-sm">
+                  <span className="w-1 bg-sky-400 rounded-full animate-pulse h-2" />
+                  <span className="w-1 bg-sky-400 rounded-full animate-bounce h-4" />
+                  <span className="w-1 bg-sky-400 rounded-full animate-pulse h-3" />
+                  <span className="w-1 bg-sky-400 rounded-full animate-bounce h-5" />
+                  <span className="w-1 bg-sky-400 rounded-full animate-pulse h-2.5" />
+                </div>
+              )}
 
-          {/* Subtitle Box with Karaoke-Style Word Highlighting */}
-          <div className="bg-slate-950/85 backdrop-blur-lg border border-slate-800/90 rounded-xl p-3.5 sm:p-5 shadow-2xl max-w-4xl pointer-events-auto">
-            <p className="text-sm sm:text-base md:text-lg leading-relaxed text-slate-200">
-              {words.map((word, idx) => {
-                const isCurrent = idx === currentWordIndex && isPlaying;
-                const isPast = idx < currentWordIndex && isPlaying;
-                const isHighlightWord = dialogue?.highlightWords?.some((hw) =>
-                  word.toLowerCase().includes(hw.toLowerCase())
-                );
+              {dialogue?.tone && (
+                <span className="text-xs text-slate-400 italic hidden sm:inline">
+                  [{dialogue.tone}]
+                </span>
+              )}
+            </div>
 
-                return (
-                  <span
-                    key={idx}
-                    className={`transition-colors duration-150 inline-block mr-1.5 ${
-                      isCurrent
-                        ? 'text-sky-300 font-bold scale-105 underline decoration-sky-400 underline-offset-4'
-                        : isPast
-                        ? 'text-slate-100 font-medium'
-                        : isHighlightWord
-                        ? 'text-amber-300/90 font-semibold'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    {word}
-                  </span>
-                );
-              })}
-            </p>
+            {/* Subtitle Box with Karaoke-Style Word Highlighting */}
+            <div className="bg-slate-950/85 backdrop-blur-lg border border-slate-800/90 rounded-xl p-3.5 sm:p-5 shadow-2xl max-w-4xl pointer-events-auto">
+              <p className="text-sm sm:text-base md:text-lg leading-relaxed text-slate-200">
+                {words.map((word, idx) => {
+                  const isCurrent = idx === currentWordIndex && isPlaying;
+                  const isPast = idx < currentWordIndex && isPlaying;
+                  const isHighlightWord = dialogue?.highlightWords?.some((hw) =>
+                    word.toLowerCase().includes(hw.toLowerCase())
+                  );
 
-            {/* Clinical takeaway ticker */}
-            <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-              <span className="truncate pr-4 italic">
-                💡 {scene.caption}
-              </span>
-              <span className="shrink-0 font-mono text-[11px] text-sky-400/80">
-                Paso {currentDialogueIndex + 1}/{totalDialoguesInScene}
-              </span>
+                  return (
+                    <span
+                      key={idx}
+                      className={`transition-colors duration-150 inline-block mr-1.5 ${
+                        isCurrent
+                          ? 'text-sky-300 font-bold scale-105 underline decoration-sky-400 underline-offset-4'
+                          : isPast
+                          ? 'text-slate-100 font-medium'
+                          : isHighlightWord
+                          ? 'text-amber-300/90 font-semibold'
+                          : 'text-slate-400'
+                      }`}
+                    >
+                      {word}
+                    </span>
+                  );
+                })}
+              </p>
+
+              {/* Clinical takeaway ticker */}
+              <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+                <span className="truncate pr-4 italic">
+                  💡 {scene.caption}
+                </span>
+                <span className="shrink-0 font-mono text-[11px] text-sky-400/80">
+                  Paso {currentDialogueIndex + 1}/{totalDialoguesInScene}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Video Transportation Control Deck */}
         <div
@@ -378,6 +404,20 @@ export const CinematicPlayer: React.FC<CinematicPlayerProps> = ({
                   </button>
                 ))}
               </div>
+
+              {/* Subtitles Toggle Button in Transport Deck */}
+              <button
+                onClick={handleToggleSubtitles}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                  showSubtitles
+                    ? 'text-sky-300 bg-sky-950/80 border-sky-600/70 shadow-sm'
+                    : 'text-slate-400 bg-slate-900 border-slate-700/60 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+                title={showSubtitles ? 'Ocultar tarjeta de transcripción' : 'Mostrar tarjeta de transcripción'}
+              >
+                <Captions className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden md:inline font-mono text-[11px]">Subtítulos</span>
+              </button>
 
               {/* Voice Config (Martín vs Gastón differentiation) */}
               <button

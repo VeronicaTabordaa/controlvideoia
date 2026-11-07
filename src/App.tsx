@@ -22,6 +22,7 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1.0);
   const [labPreset, setLabPreset] = useState<string>('proposedPID');
+  const [showSubtitles, setShowSubtitles] = useState(false);
 
   const [voiceState, setVoiceState] = useState<VoicePlaybackState>({
     isPlaying: false,
@@ -191,6 +192,8 @@ export default function App() {
         isMuted={isMuted}
         onToggleMute={() => setIsMuted((prev) => !prev)}
         currentSceneNumber={currentScene.number}
+        showSubtitles={showSubtitles}
+        onToggleSubtitles={() => setShowSubtitles((prev) => !prev)}
       />
 
       {/* Main View Area */}
@@ -216,6 +219,8 @@ export default function App() {
             onToggleMute={() => setIsMuted((prev) => !prev)}
             onChangeVolume={(vol) => setVolume(vol)}
             onOpenInLab={handleOpenInLab}
+            showSubtitles={showSubtitles}
+            onToggleSubtitles={() => setShowSubtitles((prev) => !prev)}
           />
         )}
 
