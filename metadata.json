@@ -1,0 +1,6 @@
+{
+  "name": "Entre la Precisión y el Riesgo - Prótesis Mioeléctrica",
+  "description": "Video interactivo y laboratorio de control de sistemas para prótesis mioeléctricas con Martín, Sofía y Gastón: análisis de LGR, controlador PID y rehabilitación funcional.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
